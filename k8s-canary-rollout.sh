@@ -166,7 +166,7 @@ else
     
     echo "USAGE\n k8s-canary-rollout.sh [WORKING_VOLUME] [PROD_DEPLOYMENT] [CANARY_DEPLOYMENT] [TRAFFIC_INCREMENT] [NAMESPACE] [CANARY_IMAGE] [SECONDS]"
     echo "\t [WORKING_VOLUME] - This should be set with \${{CF_VOLUME_PATH}}"
-    echo "\t [PROD_DEPLOYMENT] - The name of the service currently receiving traffic from the Istio gateway"
+    echo "\t [PROD_DEPLOYMENT] - The name of the service currently receiving traffic"
     echo "\t [CANARY_DEPLOYMENT] - The name of the new service we're rolling out."
     echo "\t [TRAFFIC_INCREMENT] - Integer between 1-100 that will step increase traffic"
     echo "\t [NAMESPACE] - Namespace of the application"
