@@ -65,9 +65,8 @@ incrementservice(){
 
     let new_canary_replicas="$canary_replicas+$increment"
     #Sanity check
-    if [ "$new_canary_replicas" -ge "$starting_replicas" ]; then
+    if [ "$new_canary_replicas" -gt "$starting_replicas" ]; then
             new_canary_replicas=$starting_replicas
-            new_prod_replicas=0
     fi
 
     echo "[CANARY SCALE] Setting canary replicas to $new_canary_replicas"
