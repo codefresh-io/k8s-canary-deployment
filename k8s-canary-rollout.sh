@@ -71,14 +71,14 @@ incrementservice(){
     fi
 
     echo "[CANARY SCALE] Setting canary replicas to $new_canary_replicas"
-    kubectl scale --replicas=$new_canary_replicas deploy/$CANARY_DEPLOYMENT 
+    kubectl -n $NAMESPACE scale --replicas=$new_canary_replicas deploy/$CANARY_DEPLOYMENT 
 
     echo "[CANARY SCALE] Setting production replicas to $new_prod_replicas"
-    kubectl scale --replicas=$new_prod_replicas deploy/$PROD_DEPLOYMENT 
+    kubectl -n $NAMESPACE scale --replicas=$new_prod_replicas deploy/$PROD_DEPLOYMENT 
 
 
     #Wait a bit until production instances are down. This should always succeed
-    kubectl rollout status deployment/$PROD_DEPLOYMENT
+    kubectl -n $NAMESPACE rollout status deployment/$PROD_DEPLOYMENT
 
     #Calulate increments. N = the number of starting pods, I = Increment value, X = how many pods to add
     # x / (N + x) = I 
