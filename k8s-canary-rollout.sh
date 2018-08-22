@@ -102,6 +102,9 @@ incrementservice(){
 }
 
 mainloop(){
+
+    echo "[CANARY INFO] Selecting Kubernetes cluster"
+    kubectl config use-context ${KUBE_CONTEXT}
    
     echo "[CANARY INFO] Locating current deployment"
     kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml > $WORKING_VOLUME/canary_deployment.yaml
