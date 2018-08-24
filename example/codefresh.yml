@@ -1,19 +1,22 @@
 version: '1.0'
 steps:
-  build_image:
-    title: Building Codefresh Canary mechanism
+    BuildingDockerImage:
+    title: Building Docker Image
     type: build
-    image_name: k8s-canary
-    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
-  canary_deploy:
-    title: Deploy with canary 
-    image: ${{build_image}}
-    #The directory should be relative to git repository that is used for cloning
-    working_directory: ${{main_clone}}
-    #Dockerfile location should be relative to the working directory
-    commands: 
-      - kubectl config get-contexts
-      - kubectl config use-context myDemoAKSCluster
-      - kubectl get pods
-      # my-app-version-1 is a 5 replica service/deployment with kkapelon/pythonflasksampleapp:master
-      - /app/k8s-canary-rollout.sh . my-app-version-1 my-app-version-3 35 default kkapelon/pythonflasksampleapp:production 20
+    image_name: trivial-web
+    working_directory: ./example/
+    tag: '${{CF_SHORT_REVISION}}'
+    dockerfile: Dockerfile
+  canaryDeploy:
+    title: "Deploying new version ${{CF_SHORT_REVISION}}"
+    image: r.cfcr.io/kostis-codefresh/k8s-canary:master
+    environment:
+      - WORKING_VOLUME=.
+      - SERVICE_NAME=my-app-service
+      - DEPLOYMENT_NAME=trivial
+      - TRAFFIC_INCREMENT=20
+      - NEW_VERSION=${{CF_SHORT_REVISION}}
+      - SLEEP_SECONDS=30
+      - NAMESPACE=canary
+      - KUBE_CONTEXT=myDemoAKSCluster
+  

@@ -111,8 +111,8 @@ incrementservice(){
 
 mainloop(){
 
-    #echo "[CANARY INFO] Selecting Kubernetes cluster"
-    #kubectl config use-context ${KUBE_CONTEXT}
+    echo "[CANARY INFO] Selecting Kubernetes cluster"
+    kubectl config use-context ${KUBE_CONTEXT}
 
     echo "[CANARY INFO] Locating current version"
     CURRENT_VERSION=$(kubectl get service $SERVICE_NAME -o=jsonpath='{.metadata.labels.version}' --namespace=${NAMESPACE}) 
@@ -195,14 +195,14 @@ if [ "$1" != "" ] && [ "$2" != "" ] && [ "$3" != "" ] && [ "$4" != "" ] && [ "$5
     CANARY_DEPLOYMENT=$DEPLOYMENT_NAME-$NEW_VERSION
 else
     
-    echo "USAGE\n k8s-canary-rollout.sh [WORKING_VOLUME] [DEPLOYMENT_NAME] [TRAFFIC_INCREMENT] [NAMESPACE] [NEW_VERSION] [SECONDS]"
+    echo "USAGE\n k8s-canary-rollout.sh [WORKING_VOLUME] [SERVICE_NAME] [DEPLOYMENT_NAME] [TRAFFIC_INCREMENT] [NAMESPACE] [NEW_VERSION] [SLEEP_SECONDS]"
     echo "\t [WORKING_VOLUME] - This should be set with \${{CF_VOLUME_PATH}}"
     echo "\t [SERVICE_NAME] - Name of the current service"
     echo "\t [DEPLOYMENT_NAME] - The name of the current deployment"
     echo "\t [TRAFFIC_INCREMENT] - Integer between 1-100 that will step increase traffic"
     echo "\t [NAMESPACE] - Namespace of the application"
     echo "\t [NEW_VERSION] - The next version of the Docker image"
-    echo "\t [SECONDS] - seconds to wait for each canary step"
+    echo "\t [SLEEP_SECONDS] - seconds to wait for each canary step"
     exit 1;
 fi
 
