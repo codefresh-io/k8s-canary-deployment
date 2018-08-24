@@ -9,7 +9,7 @@ spec:
     metadata:
       labels:
         name: trivial
-        app: trivial
+        app: trivial-c39f076
     spec:
       containers:
       - name: trivial-web
