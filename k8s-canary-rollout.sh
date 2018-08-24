@@ -41,6 +41,14 @@ cancel(){
     exit 1
 }
 
+
+cleanup(){
+    echo "[CANARY CLEANUP] removing previous deployment $PROD_DEPLOYMENT"
+    kubectl delete deployment $PROD_DEPLOYMENT -n $NAMESPACE
+    echo "[CANARY CLEANUP] marking canary as new production"
+    kubectl get service $SERVICE_NAME -o=yaml --namespace=${NAMESPACE} | sed -e "s/$CURRENT_VERSION/$NEW_VERSION/g" | kubectl apply --namespace=${NAMESPACE} -f - 
+
+}
 incrementservice(){
     percent=$1
     starting_replicas=$2
@@ -103,8 +111,19 @@ incrementservice(){
 
 mainloop(){
 
-    echo "[CANARY INFO] Selecting Kubernetes cluster"
-    kubectl config use-context ${KUBE_CONTEXT}
+    #echo "[CANARY INFO] Selecting Kubernetes cluster"
+    #kubectl config use-context ${KUBE_CONTEXT}
+
+    echo "[CANARY INFO] Locating current version"
+    CURRENT_VERSION=$(kubectl get service $SERVICE_NAME -o=jsonpath='{.metadata.labels.version}' --namespace=${NAMESPACE}) 
+
+    if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
+       echo "[DEPLOY NOP] NEW_VERSION is same as CURRENT_VERSION. Both are at $CURRENT_VERSION"
+       exit 0
+    fi  
+
+    echo "[CANARY INFO] current version is $CURRENT_VERSION"
+    PROD_DEPLOYMENT=$DEPLOYMENT_NAME-$CURRENT_VERSION
    
     echo "[CANARY INFO] Locating current deployment"
     kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml > $WORKING_VOLUME/canary_deployment.yaml
@@ -112,7 +131,6 @@ mainloop(){
     echo "[CANARY INFO] keeping a backup of original deployment"
     cp $WORKING_VOLUME/canary_deployment.yaml $WORKING_VOLUME/original_deployment.yaml
 
-    NAME=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=jsonpath='{.metadata.name}')
     echo "[CANARY INFO] Reading current docker image"
     IMAGE=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml | grep image: | sed -E 's/.*image: (.*)/\1/')
     echo "[CANARY INFO] found image $IMAGE"
@@ -125,12 +143,16 @@ mainloop(){
     echo "[CANARY INFO] Replaced deployment name"
 
     #Replace docker image
-    sed -Ei -- "s#image: $IMAGE#image: $CANARY_IMAGE#g" $WORKING_VOLUME/canary_deployment.yaml
+    sed -Ei -- "s/$CURRENT_VERSION/$NEW_VERSION/g" $WORKING_VOLUME/canary_deployment.yaml
     echo "[CANARY INFO] Replaced image name"
 
+
+    echo "[CANARY INFO] Production deployment is $PROD_DEPLOYMENT, canary is $CANARY_DEPLOYMENT"
     #Start with one replica
     sed -Ei -- "s#replicas: $STARTING_REPLICAS#replicas: 1#g" $WORKING_VOLUME/canary_deployment.yaml
     echo "[CANARY INIT] Launching 1 pod with canary"
+
+
 
     #Launch canary
     kubectl apply -f $WORKING_VOLUME/canary_deployment.yaml -n $NAMESPACE
@@ -149,6 +171,7 @@ mainloop(){
         incrementservice $TRAFFIC_INCREMENT $STARTING_REPLICAS
 
         if [ "$p" == "100" ]; then
+            cleanup
             echo "[CANARY INFO] Done"
             exit 0
         fi
@@ -156,25 +179,29 @@ mainloop(){
         sleep $SLEEP_SECONDS
      	healthcheck
     done
+
+
+
 }
 
 if [ "$1" != "" ] && [ "$2" != "" ] && [ "$3" != "" ] && [ "$4" != "" ] && [ "$5" != "" ] && [ "$6" != "" ] && [ "$7" != "" ]; then
     WORKING_VOLUME=${1%/}
-    PROD_DEPLOYMENT=$2
-    CANARY_DEPLOYMENT=$3
+    SERVICE_NAME=$2
+    DEPLOYMENT_NAME=$3
     TRAFFIC_INCREMENT=$4
     NAMESPACE=$5
-    CANARY_IMAGE=$6
+    NEW_VERSION=$6
     SLEEP_SECONDS=$7
+    CANARY_DEPLOYMENT=$DEPLOYMENT_NAME-$NEW_VERSION
 else
     
-    echo "USAGE\n k8s-canary-rollout.sh [WORKING_VOLUME] [PROD_DEPLOYMENT] [CANARY_DEPLOYMENT] [TRAFFIC_INCREMENT] [NAMESPACE] [CANARY_IMAGE] [SECONDS]"
+    echo "USAGE\n k8s-canary-rollout.sh [WORKING_VOLUME] [DEPLOYMENT_NAME] [TRAFFIC_INCREMENT] [NAMESPACE] [NEW_VERSION] [SECONDS]"
     echo "\t [WORKING_VOLUME] - This should be set with \${{CF_VOLUME_PATH}}"
-    echo "\t [PROD_DEPLOYMENT] - The name of the service currently receiving traffic"
-    echo "\t [CANARY_DEPLOYMENT] - The name of the new service we're rolling out."
+    echo "\t [SERVICE_NAME] - Name of the current service"
+    echo "\t [DEPLOYMENT_NAME] - The name of the current deployment"
     echo "\t [TRAFFIC_INCREMENT] - Integer between 1-100 that will step increase traffic"
     echo "\t [NAMESPACE] - Namespace of the application"
-    echo "\t [CANARY_IMAGE] - New image url, must use same pull secret"
+    echo "\t [NEW_VERSION] - The next version of the Docker image"
     echo "\t [SECONDS] - seconds to wait for each canary step"
     exit 1;
 fi
