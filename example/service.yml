@@ -3,27 +3,19 @@ kind: Service
 metadata:
   creationTimestamp: 2018-08-06T11:25:47Z
   labels:
-    io.codefresh.auto-generated: e5e69f11-dd50-4bf6-bbec-d9adeb320553
-    io.codefresh.generated-at: "1533554747401"
     version: "c39f076"
-  name: my-app-service
+  name: my-demo-app
   namespace: canary
-  resourceVersion: "3209012"
-  selfLink: /api/v1/namespaces/demo/services/trivial
 spec:
-  clusterIP: 10.0.28.197
+
   externalTrafficPolicy: Cluster
   ports:
   - name: http1
-    nodePort: 30085
     port: 80
     protocol: TCP
     targetPort: 8080
   selector:
-    app: trivial
+    app: my-demo-app
   sessionAffinity: None
   type: LoadBalancer
-status:
-  loadBalancer:
-    ingress:
-    - ip: 104.43.132.137
+

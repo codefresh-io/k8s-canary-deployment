@@ -9,14 +9,14 @@ steps:
     dockerfile: Dockerfile
   canaryDeploy:
     title: "Deploying new version ${{CF_SHORT_REVISION}}"
-    image: r.cfcr.io/kostis-codefresh/k8s-canary:master
+    image: codefresh/k8s-canary:master
     environment:
       - WORKING_VOLUME=.
-      - SERVICE_NAME=my-app-service
-      - DEPLOYMENT_NAME=trivial
+      - SERVICE_NAME=my-demo-app
+      - DEPLOYMENT_NAME=my-demo-app
       - TRAFFIC_INCREMENT=20
       - NEW_VERSION=${{CF_SHORT_REVISION}}
-      - SLEEP_SECONDS=30
+      - SLEEP_SECONDS=45
       - NAMESPACE=canary
       - KUBE_CONTEXT=myDemoAKSCluster
   
