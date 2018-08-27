@@ -16,7 +16,7 @@ steps:
       - DEPLOYMENT_NAME=my-demo-app
       - TRAFFIC_INCREMENT=20
       - NEW_VERSION=${{CF_SHORT_REVISION}}
-      - SLEEP_SECONDS=45
+      - SLEEP_SECONDS=40
       - NAMESPACE=canary
       - KUBE_CONTEXT=myDemoAKSCluster
   
