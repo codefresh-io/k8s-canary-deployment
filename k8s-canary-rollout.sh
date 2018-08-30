@@ -6,7 +6,7 @@ healthcheck(){
     h=true
     
     #Start custom healthcheck
-    output=$(kubectl get pods -l app="$CANARY_DEPLOYMENT" -n $NAMESPACE --no-headers)
+    output=$(kubectl get pods -l app="$DEPLOYMENT_NAME" -n $NAMESPACE --no-headers)
     echo "[CANARY HEALTH] $output"
     s=($(echo "$output" | awk '{s+=$4}END{print s}'))
     c=($(echo "$output" | wc -l))
