@@ -1,6 +1,7 @@
 # Kubernetes deployment with canaries
 
 This repository holds a bash script that allows you to perform canary deployments on a Kubernetes cluster.
+It is part of the respective [Codefresh blog post](https://codefresh.io/kubernetes-tutorial/fully-automated-canary-deployments-kubernetes/)
 
 ## Description
 
