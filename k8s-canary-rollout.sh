@@ -109,35 +109,7 @@ incrementservice(){
 
 }
 
-mainloop(){
-
-    echo "[CANARY INFO] Selecting Kubernetes cluster"
-    kubectl config use-context ${KUBE_CONTEXT}
-
-    echo "[CANARY INFO] Locating current version"
-    CURRENT_VERSION=$(kubectl get service $SERVICE_NAME -o=jsonpath='{.metadata.labels.version}' --namespace=${NAMESPACE}) 
-
-    if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
-       echo "[DEPLOY NOP] NEW_VERSION is same as CURRENT_VERSION. Both are at $CURRENT_VERSION"
-       exit 0
-    fi  
-
-    echo "[CANARY INFO] current version is $CURRENT_VERSION"
-    PROD_DEPLOYMENT=$DEPLOYMENT_NAME-$CURRENT_VERSION
-   
-    echo "[CANARY INFO] Locating current deployment"
-    kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml > $WORKING_VOLUME/canary_deployment.yaml
-    
-    echo "[CANARY INFO] keeping a backup of original deployment"
-    cp $WORKING_VOLUME/canary_deployment.yaml $WORKING_VOLUME/original_deployment.yaml
-
-    echo "[CANARY INFO] Reading current docker image"
-    IMAGE=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml | grep image: | sed -E 's/.*image: (.*)/\1/')
-    echo "[CANARY INFO] found image $IMAGE"
-    echo "[CANARY INFO] Finding current replicas"
-    STARTING_REPLICAS=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE --no-headers | awk '{print $2}')
-    echo "[CANARY INFO] Found replicas $STARTING_REPLICAS"
-
+copy_deployment(){
     #Replace old deployment name with new
     sed -Ei -- "s/name\: $PROD_DEPLOYMENT/name: $CANARY_DEPLOYMENT/g" $WORKING_VOLUME/canary_deployment.yaml
     echo "[CANARY INFO] Replaced deployment name"
@@ -151,8 +123,49 @@ mainloop(){
     #Start with one replica
     sed -Ei -- "s#replicas: $STARTING_REPLICAS#replicas: 1#g" $WORKING_VOLUME/canary_deployment.yaml
     echo "[CANARY INIT] Launching 1 pod with canary"
+}
 
+input_deployment(){
+    #Ouput user provided yml file to use as deployment object
+    echo "${INPUT_DEPLOYMENT}" > ${WORKING_VOLUME}/canary_deployment.yaml
+}
 
+mainloop(){
+
+    echo "[CANARY INFO] Selecting Kubernetes cluster"
+    kubectl config use-context ${KUBE_CONTEXT}
+
+    echo "[CANARY INFO] Locating current version"
+    CURRENT_VERSION=$(kubectl get service $SERVICE_NAME -o=jsonpath='{.metadata.labels.version}' --namespace=${NAMESPACE}) 
+
+    if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
+       echo "[DEPLOY NOP] NEW_VERSION is same as CURRENT_VERSION. Both are at $CURRENT_VERSION"
+       exit 0
+    fi  
+    
+    echo "[CANARY INFO] current version is $CURRENT_VERSION"
+    PROD_DEPLOYMENT=$DEPLOYMENT_NAME-$CURRENT_VERSION
+   
+    echo "[CANARY INFO] Locating current deployment"
+    kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml > $WORKING_VOLUME/canary_deployment.yaml
+
+    echo "[CANARY INFO] keeping a backup of original deployment"
+    cp $WORKING_VOLUME/canary_deployment.yaml $WORKING_VOLUME/original_deployment.yaml
+
+    echo "[CANARY INFO] Reading current docker image"
+    IMAGE=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml | grep image: | sed -E 's/.*image: (.*)/\1/')
+    echo "[CANARY INFO] found image $IMAGE"
+    echo "[CANARY INFO] Finding current replicas"
+    STARTING_REPLICAS=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE --no-headers | awk '{print $2}')
+    echo "[CANARY INFO] Found replicas $STARTING_REPLICAS"
+
+    if [[ -n ${INPUT_DEPLOYMENT} ]]; then
+        #Allow user to provide custom new yaml deployment object
+        input_deployment
+    else
+        #Copy existing deployment and update image only
+        copy_deployment
+    fi
 
     #Launch canary
     kubectl apply -f $WORKING_VOLUME/canary_deployment.yaml -n $NAMESPACE
@@ -209,3 +222,4 @@ fi
 echo $BASH_VERSION
 
 mainloop
+
