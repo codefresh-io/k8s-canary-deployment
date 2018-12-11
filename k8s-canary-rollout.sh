@@ -156,7 +156,7 @@ mainloop(){
     IMAGE=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=yaml | grep image: | sed -E 's/.*image: (.*)/\1/')
     echo "[CANARY INFO] found image $IMAGE"
     echo "[CANARY INFO] Finding current replicas"
-    STARTING_REPLICAS=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE --no-headers | awk '{print $2}')
+    STARTING_REPLICAS=$(kubectl get deployment $PROD_DEPLOYMENT -n $NAMESPACE -o=jsonpath='{.spec.replicas}')
     echo "[CANARY INFO] Found replicas $STARTING_REPLICAS"
 
     if [[ -n ${INPUT_DEPLOYMENT} ]]; then
