@@ -38,7 +38,7 @@ cancel(){
     kubectl delete deployment $CANARY_DEPLOYMENT
 
     echo "[CANARY DELETE] Removing canary horizontal pod autoscaler completely"
-    kubectl delete deployment $CANARY_DEPLOYMENT -n $NAMESPACE
+    kubectl delete hpa $CANARY_DEPLOYMENT -n $NAMESPACE
 
     exit 1
 }
