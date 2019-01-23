@@ -130,7 +130,7 @@ input_deployment(){
 
 mainloop(){
     echo "[CANARY INFO] Selecting Kubernetes cluster"
-    kubectl config use-context ${KUBE_CONTEXT}
+    kubectl config use-context "${KUBE_CONTEXT}"
 
     echo "[CANARY INFO] Locating current version"
     CURRENT_VERSION=$(kubectl get service $SERVICE_NAME -o=jsonpath='{.metadata.labels.version}' --namespace=${NAMESPACE})
