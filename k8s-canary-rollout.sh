@@ -178,6 +178,12 @@ mainloop(){
     #Launch canary
     kubectl apply -f $WORKING_VOLUME/canary_deployment.yaml -n $NAMESPACE
 
+    echo "[CANARY INFO] Awaiting canary pod..."
+    while [ $(kubectl get pods -l app="$DEPLOYMENT_NAME" -n $NAMESPACE --no-headers | wc -l) -eq 0 ]
+    do
+      sleep 2
+    done
+
     echo "[CANARY INFO] Canary target replicas: $STARTING_REPLICAS"
 
     healthcheck
