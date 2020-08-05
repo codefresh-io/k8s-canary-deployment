@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 healthcheck(){
-    echo "[CANARY INFO] Starting Heathcheck"
+    echo "[CANARY INFO] Starting healthcheck"
     h=true
 
     #Start custom healthcheck
