@@ -1,3 +1,8 @@
+# This Repository is not used anymore
+
+Please use the new repo for Pull requests and issues at https://github.com/codefresh-io/steps/tree/master/incubating/k8s-canary-deployment
+
+
 # Kubernetes deployment with canaries
 
 This repository holds a bash script that allows you to perform canary deployments on a Kubernetes cluster.
